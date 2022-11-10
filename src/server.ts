@@ -1,6 +1,10 @@
 import express from 'express'
 
+import * as dotenv from 'dotenv'
+
 import { Router, Request, Response } from 'express';
+
+dotenv.config()
 
 const app = express();
 
@@ -44,4 +48,6 @@ route.post('/cart/abandon', (req: Request, res: Response) => {
 
 app.use(route)
 
-app.listen(3333, () => 'server running on port 3333');
+const port = process.env.POST || 3000;
+
+app.listen(port, () => `server running on port ${port}`);
