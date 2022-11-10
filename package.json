@@ -1,7 +1,6 @@
 {
   "name": "sniperx-api",
   "version": "1.0.0",
-  "main": "index.js",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2"
@@ -15,5 +14,8 @@
     "dev": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules src/server.ts",
     "build": "tsc",
     "start:prod": "node ./dist/server.js"
+  },
+  "engines": {
+    "node": "16.15.1"
   }
 }
