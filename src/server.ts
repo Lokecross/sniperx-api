@@ -41,6 +41,11 @@ route.post('/subscription/canceled', (req: Request, res: Response) => {
   res.json({ success: true, content: req.body })
 })
 
+// subscription.approved - Disparado quando a assinatura for cancelada
+route.post('/subscription/approved', (req: Request, res: Response) => {
+  res.json({ success: true, content: req.body })
+})
+
 // cart.abandon - Disparado quando o carrinho for abandonado
 route.post('/cart/abandon', (req: Request, res: Response) => {
   res.json({ success: true, content: req.body })
