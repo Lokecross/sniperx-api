@@ -4,6 +4,10 @@ import * as dotenv from 'dotenv'
 
 import { Router, Request, Response } from 'express';
 
+import OrderCreatedController from './controllers/OrderCreatedController';
+
+const orderCreatedController = new OrderCreatedController();
+
 dotenv.config()
 
 const app = express();
@@ -17,11 +21,7 @@ route.get('/', (req: Request, res: Response) => {
 })
 
 // order.created - Disparado ao criar novo pedido
-route.post('/order/created', (req: Request, res: Response) => {
-  console.log(req.body);
-
-  res.json({ success: true, content: req.body })
-})
+route.post('/order/created', orderCreatedController.create);
 
 // order.approved - Disparado ao pedido ser pago e aprovado
 route.post('/order/approved', (req: Request, res: Response) => {
