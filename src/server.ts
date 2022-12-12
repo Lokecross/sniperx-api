@@ -5,9 +5,11 @@ import * as dotenv from 'dotenv'
 import { Router, Request, Response } from 'express';
 
 import OrderCreatedController from './controllers/OrderCreatedController';
+import OrderApprovedController from './controllers/OrderApprovedController';
 import consolePath from './middlewares/consolePath';
 
 const orderCreatedController = new OrderCreatedController();
+const orderApprovedController = new OrderApprovedController();
 
 dotenv.config()
 
@@ -27,9 +29,7 @@ route.get('/', (req: Request, res: Response) => {
 route.post('/order/created', orderCreatedController.create);
 
 // order.approved - Disparado ao pedido ser pago e aprovado
-route.post('/order/approved', (req: Request, res: Response) => {
-  res.json({ success: true, content: req.body })
-})
+route.post('/order/approved', orderApprovedController.create)
 
 // order.payment_failed - Disparado ao pedido ter um pagamento falho
 route.post('/order/payment_failed', (req: Request, res: Response) => {
@@ -46,7 +46,7 @@ route.post('/subscription/canceled', (req: Request, res: Response) => {
   res.json({ success: true, content: req.body })
 })
 
-// subscription.approved - Disparado quando a assinatura for cancelada
+// subscription.approved - Disparado quando a assinatura for aprovada
 route.post('/subscription/approved', (req: Request, res: Response) => {
   res.json({ success: true, content: req.body })
 })

@@ -104,7 +104,7 @@ interface ISniperxHook {
   }>;
 }
 
-class OrderCreatedService {
+class OrderApprovedService {
   constructor(
   ) {}
 
@@ -150,10 +150,10 @@ class OrderCreatedService {
       confirmation_purchase_date: new Date().toISOString(),
     }
 
-    // await astronmembers.post(`/hotmart-webhook/${process.env.ASTRON_API_ID}`, body);
+    await astronmembers.post(`/hotmart-webhook/${process.env.ASTRON_API_ID}`, body);
 
-    // console.log('OK');
+    console.log('OK');
   }
 }
 
-export default OrderCreatedService;
+export default OrderApprovedService;

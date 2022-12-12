@@ -4,9 +4,9 @@ import OrderCreatedService from '../services/OrderCreatedService';
 
 export default class OrderCreatedController {
   public async create(req: Request, res: Response): Promise<Response> {
-    const indexDefaultFields = new OrderCreatedService();
+    const orderCreated = new OrderCreatedService();
 
-    await indexDefaultFields.execute(req.body);
+    await orderCreated.execute(req.body);
 
     return res.json({ success: true });
   }
