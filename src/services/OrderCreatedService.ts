@@ -1,32 +1,35 @@
 import astronmembers from '../apis/astronmembers';
+import sniperx from '../apis/sniperx';
+
+type IAstronPaymantType = 'billet'| 'credit_card'| 'debit_card'| 'bank_transfer'|
+'moip_balance'| 'bcash_balance'|
+'paypal'|'order.checkout.hotmart_balance';
 
 interface IAstronHook {
   hottok: string;
-  prod: number;
-  prod_name: string;
+  prod: number | string;
+  prod_name?: string;
   off: string;
   price: number;
   email: string;
   name: string;
   doc: string;
   phone_local_code: number;
-  phone_number: number;
+  phone_number: number | string;
   transaction: string;
   status: 'approved' | 'canceled' | 'refunded'  | 'dispute' | 'chargeback' | 'blocked' | 'billet_printed' | 'wayting_payment' | 'delayed';
-  payment_type: 'billet'| 'credit_card'| 'debit_card'| 'bank_transfer'|
-  'moip_balance'| 'bcash_balance'|
-  'paypal'|'order.checkout.hotmart_balance';
+  payment_type: IAstronPaymantType;
   name_subscription_plan?: string;
-  subscriber_code: string;
-  recurrency_period:  7 | 30 | 60 | 90 | 180 | 360;
-  recurrency: number;
+  subscriber_code?: string;
+  recurrency_period?:  7 | 30 | 60 | 90 | 180 | 360;
+  recurrency?: number;
   subscription_status?: 'active' | 'canceled' | 'past_due' | 'expired' | 'started' | 'inactive';
   purchase_date: string;
   confirmation_purchase_date: string;
   billet_barcode?: string;
-  producer_name: string;
+  producer_name?: string;
   full_price: number;
-  product_support_email: string;
+  product_support_email?: string;
   installments_number?: number;
   productOfferPaymentMode: 'pagamento_unico' | 'multiplos_pagamentos' | 'pagamento_vista';
 }
@@ -48,7 +51,7 @@ interface ISniperxHook {
   state: string;
   card_number: string | null;
   card_installments: string | null;
-  payment_method: string;
+  payment_method: 'pix' | 'boleto' | 'credit_card';
   information_additional: string | null;
   shipping_method: string;
   shipping_deadline: string | null;
@@ -67,7 +70,18 @@ interface ISniperxHook {
   created_at: string;
   id: number;
   hash_id: string;
-  products: Array<string>;
+  products: Array<{
+    id: number;
+    title: string;
+    variant_title: string;
+    image: string | null;
+    quantity: number;
+    price: string;
+    order_id: number;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+  }>;
   sub_total: number;
   interest: number;
   full_address: string;
@@ -76,47 +90,69 @@ interface ISniperxHook {
   payment_method_title: string;
   subscription: boolean;
   asset_download_url: string;
-  items: Array<string>;
+  items: Array<{
+    id: number;
+    title: string;
+    variant_title: string;
+    image: string | null;
+    quantity: number;
+    price: string;
+    order_id: number;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+  }>;
 }
 
 class OrderCreatedService {
   constructor(
   ) {}
 
-  public async execute(sniperx: ISniperxHook): Promise<void> {
-    const body: IAstronHook = {
-      hottok: 'ThisIsALongSecureToken',
-      name: sniperx.full_name,
-      email: sniperx.email,
-      full_price: sniperx.amount,
-      price: sniperx.amount,
-      subscriber_code: sniperx.user_uuid,
-      transaction: sniperx.uuid,
-      purchase_date: sniperx.created_at,
-      status: 'wayting_payment',
-      prod: 1,
-      prod_name: 'Testing prod_name',
-      producer_name: 'Testing producer_name',
-      phone_number: Number(sniperx.phone_number),
-      phone_local_code: 55,
-      doc: sniperx.doc,
-      productOfferPaymentMode: 'pagamento_unico',
-      payment_type: 'debit_card',
-      product_support_email: 'dev@sniperx.co',
-      confirmation_purchase_date: sniperx.created_at,
-      recurrency: 1,
-      recurrency_period: 360,
-      off: sniperx.uuid,
+  public async execute(sniperxbody: ISniperxHook): Promise<void> {
+    const { data: { token } } = await sniperx.post<{ token: string }>('/shop/auth/credentials', {
+      email: process.env.SNIPERX_USER,
+      password: process.env.SNIPERX_PASSWORD,
+      shop_uuid: process.env.SNIPERX_SHOP,
+    });
 
-      // subscription_status: 'active',
-      // name_subscription_plan: '',
-      // installments_number: 1,
-      // billet_barcode: '',
+    sniperx.defaults.headers.common.authorization = `Bearer ${token}`;
+
+    const { data: { sku } } = await sniperx.post<{ sku: string }>(`/shop/products/show/${sniperxbody.products[0].id}`);
+
+    const payment_type = (): IAstronPaymantType => {
+      if (sniperxbody.payment_method === 'pix') {
+        return 'bank_transfer';
+      }
+
+      if (sniperxbody.payment_method === 'boleto') {
+        return 'billet';
+      }
+
+      return 'credit_card';
     }
 
-    const { data } = await astronmembers.post('/hotmart-webhook/JQR6yHV2CrkJgcp', body);
+    const body: IAstronHook = {
+      hottok: process.env.ASTRON_HOTTOK as string,
+      prod: process.env.SNIPERX_SHOP as string,
+      off: sku,
+      name: sniperxbody.full_name,
+      email: sniperxbody.email,
+      full_price: sniperxbody.amount,
+      price: sniperxbody.amount,
+      transaction: sniperxbody.uuid,
+      purchase_date: sniperxbody.created_at,
+      status: 'approved',
+      phone_number: sniperxbody.phone_number,
+      phone_local_code: 55,
+      doc: sniperxbody.doc,
+      productOfferPaymentMode: 'pagamento_unico',
+      payment_type: payment_type(),
+      confirmation_purchase_date: new Date().toISOString(),
+    }
 
-    console.log(data);
+    await astronmembers.post(`/hotmart-webhook/${process.env.ASTRON_API_ID}`, body);
+
+    console.log('OK');
   }
 }
 
